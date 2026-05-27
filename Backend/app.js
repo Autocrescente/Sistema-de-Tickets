@@ -7,6 +7,11 @@ const errorHandler = require("./src/middleware/errorHandler");
 
 const app = express();
 
+if (process.env.APP_BASE_PATH) {
+  const prodUrl = `https://app.autocrescente.com${process.env.APP_BASE_PATH}`;
+  swaggerSpec.servers.unshift({ url: prodUrl, description: "Produção" });
+}
+
 app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
