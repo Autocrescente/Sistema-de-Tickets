@@ -1,0 +1,650 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sistema de Tickets — API",
+    "version": "1.0.0",
+    "description": "API REST para gestão de tickets de suporte interno.\n\nRotas protegidas requerem um JWT no header `Authorization: Bearer <token>`, emitido pelo serviço de autenticação externo."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Desenvolvimento"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Attachment": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "originalName": {
+            "type": "string",
+            "example": "fatura.pdf"
+          },
+          "filename": {
+            "type": "string",
+            "example": "a1b2c3d4.pdf"
+          },
+          "mimetype": {
+            "type": "string",
+            "example": "application/pdf"
+          },
+          "size": {
+            "type": "integer",
+            "example": 204800,
+            "description": "Tamanho em bytes"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string",
+            "example": "Técnico João"
+          },
+          "text": {
+            "type": "string",
+            "example": "Problema identificado e resolvido."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Ticket": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "ticketNumber": {
+            "type": "string",
+            "example": "TKT-20250526-0001"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "João"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Silva"
+          },
+          "email": {
+            "type": "string",
+            "example": "joao@empresa.com"
+          },
+          "recipient": {
+            "type": "string",
+            "example": "suporte@empresa.com"
+          },
+          "subject": {
+            "type": "string",
+            "example": "Problema com impressora"
+          },
+          "description": {
+            "type": "string",
+            "example": "A impressora do 2º andar não imprime."
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "urgente",
+              "alta",
+              "normal",
+              "baixa"
+            ],
+            "example": "normal"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "aberto",
+              "em_progresso",
+              "aguarda",
+              "resolvido",
+              "fechado"
+            ],
+            "example": "aberto"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Attachment"
+            }
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Comment"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Dados inválidos."
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/tickets": {
+      "post": {
+        "summary": "Criar novo ticket (público)",
+        "tags": [
+          "Tickets"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "firstName",
+                  "lastName",
+                  "email",
+                  "subject",
+                  "description"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "example": "João"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "example": "Silva"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "joao@empresa.com"
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "example": "suporte@empresa.com"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "example": "Problema com impressora"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "A impressora do 2º andar não funciona."
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "urgente",
+                      "alta",
+                      "normal",
+                      "baixa"
+                    ],
+                    "default": "normal"
+                  },
+                  "attachments": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "PDFs ou imagens (máx. 5 ficheiros, 10 MB cada)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ticket criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit excedido"
+          }
+        }
+      },
+      "get": {
+        "summary": "Listar tickets com filtros e paginação",
+        "tags": [
+          "Tickets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "aberto",
+                "em_progresso",
+                "aguarda",
+                "resolvido",
+                "fechado"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "urgente",
+                "alta",
+                "normal",
+                "baixa"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pesquisa por número, assunto, nome ou email"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de tickets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pages": {
+                      "type": "integer"
+                    },
+                    "tickets": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Ticket"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        }
+      }
+    },
+    "/api/tickets/{id}": {
+      "get": {
+        "summary": "Obter detalhes de um ticket",
+        "tags": [
+          "Tickets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ticket não encontrado"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Atualizar estado ou dados de um ticket",
+        "tags": [
+          "Tickets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "aberto",
+                      "em_progresso",
+                      "aguarda",
+                      "resolvido",
+                      "fechado"
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "urgente",
+                      "alta",
+                      "normal",
+                      "baixa"
+                    ]
+                  },
+                  "recipient": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket atualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ticket"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ticket não encontrado"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar ticket e os seus anexos",
+        "tags": [
+          "Tickets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket eliminado"
+          },
+          "404": {
+            "description": "Ticket não encontrado"
+          }
+        }
+      }
+    },
+    "/api/tickets/{id}/comments": {
+      "post": {
+        "summary": "Adicionar comentário interno a um ticket",
+        "tags": [
+          "Tickets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "author",
+                  "text"
+                ],
+                "properties": {
+                  "author": {
+                    "type": "string",
+                    "example": "Técnico João"
+                  },
+                  "text": {
+                    "type": "string",
+                    "example": "A impressora foi substituída."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comentário adicionado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ticket não encontrado"
+          }
+        }
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "summary": "Obter estatísticas gerais dos tickets",
+        "tags": [
+          "Estatísticas"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estatísticas calculadas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer",
+                      "example": 120
+                    },
+                    "today": {
+                      "type": "integer",
+                      "example": 5
+                    },
+                    "thisWeek": {
+                      "type": "integer",
+                      "example": 23
+                    },
+                    "thisMonth": {
+                      "type": "integer",
+                      "example": 67
+                    },
+                    "byStatus": {
+                      "type": "object",
+                      "example": {
+                        "aberto": 12,
+                        "em_progresso": 5,
+                        "resolvido": 80
+                      }
+                    },
+                    "byPriority": {
+                      "type": "object",
+                      "example": {
+                        "urgente": 3,
+                        "alta": 10,
+                        "normal": 70,
+                        "baixa": 37
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Tickets",
+      "description": "Gestão de tickets de suporte"
+    },
+    {
+      "name": "Estatísticas",
+      "description": "Métricas e totais do sistema"
+    }
+  ]
+}
