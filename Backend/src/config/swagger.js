@@ -9,6 +9,7 @@ const options = {
       description: 'API REST para gestão de tickets de suporte interno.\n\nRotas protegidas requerem um JWT no header `Authorization: Bearer <token>`, emitido pelo serviço de autenticação externo.',
     },
     servers: [
+      { url: 'https://app.autocrescente.com/sistemaTickets/Api', description: 'Produção' },
       { url: `http://localhost:${process.env.PORT || 5000}`, description: 'Desenvolvimento' },
     ],
     components: {

@@ -13,7 +13,10 @@
       "PowerShell(node -e \"require\\('express'\\); require\\('mongoose'\\); require\\('multer'\\); require\\('jsonwebtoken'\\); require\\('nodemailer'\\); require\\('helmet'\\); require\\('cors'\\); require\\('dotenv'\\); console.log\\('Todas as depend�ncias OK'\\)\" 2>&1)",
       "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\Backend\\\\tests\\\\helpers\")",
       "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\Backend\\\\scripts\")",
-      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\Backend\\\\docs\")"
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\Backend\\\\docs\")",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const m = require\\('mongoose'\\); console.log\\('URI:', process.env.MONGODB_URI ? 'definida' : 'INDEFINIDA'\\); m.connect\\(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 8000 }\\).then\\(\\(\\) => { console.log\\('OK - conectado'\\); process.exit\\(0\\); }\\).catch\\(e => { console.error\\('ERRO:', e.message\\); process.exit\\(1\\); }\\);\")"
     ]
   }
 }
