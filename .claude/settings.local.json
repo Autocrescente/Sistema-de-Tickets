@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\src\\\\config\")",
+      "Bash(Out-Null)",
+      "Bash(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\src\\\\models\")",
+      "Bash(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\src\\\\controllers\")",
+      "Bash(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\src\\\\routes\")",
+      "Bash(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\src\\\\middleware\")",
+      "Bash(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\src\\\\services\")",
+      "Bash(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\src\\\\utils\")",
+      "Bash(Write-Output \"Pastas criadas\")",
+      "PowerShell(node -e \"require\\('express'\\); require\\('mongoose'\\); require\\('multer'\\); require\\('jsonwebtoken'\\); require\\('nodemailer'\\); require\\('helmet'\\); require\\('cors'\\); require\\('dotenv'\\); console.log\\('Todas as depend�ncias OK'\\)\" 2>&1)",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\Backend\\\\tests\\\\helpers\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\Backend\\\\scripts\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\Pedro Jardim\\\\OneDrive - AUTOCRESCENTE\\\\Projetos\\\\Sistema-de-Tickets\\\\Backend\\\\docs\")"
+    ]
+  }
+}
