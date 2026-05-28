@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { User, Mail, Send, FileText, PenLine, Paperclip, UploadCloud, X, Headphones } from 'lucide-react'
+import { User, Mail, Send, FileText, PenLine, Paperclip, UploadCloud, X, Loader } from 'lucide-react'
+import { createTicket } from '../services/api'
 import './TicketForm.css'
 
 function TicketForm({ onSuccess }) {
@@ -13,6 +14,8 @@ function TicketForm({ onSuccess }) {
     priority: 'normal',
   })
   const [attachment, setAttachment] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -26,9 +29,18 @@ function TicketForm({ onSuccess }) {
     setAttachment(null)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    onSuccess('TKT-20250527-0001')
+    setLoading(true)
+    setError('')
+    try {
+      const ticket = await createTicket(formData, attachment)
+      onSuccess(ticket.ticketNumber)
+    } catch (err) {
+      setError(err.message || 'Erro ao enviar. Tenta novamente.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -187,9 +199,13 @@ function TicketForm({ onSuccess }) {
             </label>
           </div>
 
-          <button type="submit" className="submit-btn">
-            <Send size={17} color="#fff" strokeWidth={2.5} />
-            Enviar Pedido
+          {error && <p className="form-error">{error}</p>}
+
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading
+              ? <><Loader size={17} className="spin" /> A enviar...</>
+              : <><Send size={17} color="#fff" strokeWidth={2.5} /> Enviar Pedido</>
+            }
           </button>
 
         </form>
