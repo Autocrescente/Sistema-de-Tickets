@@ -3,6 +3,12 @@ import { User, Mail, Send, FileText, PenLine, Paperclip, UploadCloud, X, Loader 
 import { createTicket } from '../services/api'
 import './TicketForm.css'
 
+const DESTINATARIOS = [
+  { nome: 'João Pedro',      departamento: 'Informática'        },
+  { nome: 'João Ferreira',   departamento: 'Comercial'          },
+  { nome: 'Ana Costa',       departamento: 'Recursos Humanos'   },
+]
+
 function TicketForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -16,6 +22,13 @@ function TicketForm({ onSuccess }) {
   const [attachment, setAttachment] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+
+  const suggestions = DESTINATARIOS.filter(d =>
+    formData.recipient.length > 0 &&
+    (d.nome.toLowerCase().includes(formData.recipient.toLowerCase()) ||
+     d.departamento.toLowerCase().includes(formData.recipient.toLowerCase()))
+  )
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -108,15 +121,30 @@ function TicketForm({ onSuccess }) {
 
           <div className="form-group">
             <label>Destinatário</label>
-            <div className="input-icon">
-              <span><Send size={17} /></span>
-              <input
-                type="text"
-                name="recipient"
-                value={formData.recipient}
-                onChange={handleChange}
-                placeholder="Departamento ou nome da pessoa"
-              />
+            <div className="recipient-wrapper">
+              <div className="input-icon">
+                <span><Send size={17} /></span>
+                <input
+                  type="text"
+                  name="recipient"
+                  value={formData.recipient}
+                  onChange={handleChange}
+                  placeholder="Departamento ou nome da pessoa"
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  autoComplete="off"
+                />
+              </div>
+              {showSuggestions && suggestions.length > 0 && (
+                <ul className="suggestions-list">
+                  {suggestions.map((d, i) => (
+                    <li key={i} onMouseDown={() => setFormData({ ...formData, recipient: `${d.nome} — ${d.departamento}` })}>
+                      <span className="sug-nome">{d.nome}</span>
+                      <span className="sug-dept">{d.departamento}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 
