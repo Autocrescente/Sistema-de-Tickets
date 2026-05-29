@@ -1,19 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { User, Mail, Send, FileText, PenLine, Paperclip, UploadCloud, X, Loader } from 'lucide-react'
-import { createTicket } from '../services/api'
+import { createTicket, getRecipients } from '../services/api'
 import './TicketForm.css'
-
-const DESTINATARIOS = [
-  { nome: 'João Pedro',      departamento: 'Informática'        },
-  { nome: 'João Ferreira',   departamento: 'Comercial'          },
-  { nome: 'Ana Costa',       departamento: 'Recursos Humanos'   },
-]
 
 function TicketForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
+    cc: '',
     recipient: '',
     subject: '',
     description: '',
@@ -23,11 +18,19 @@ function TicketForm({ onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [destinatarios, setDestinatarios] = useState([])
+  const [recipientDisplay, setRecipientDisplay] = useState('')
 
-  const suggestions = DESTINATARIOS.filter(d =>
-    formData.recipient.length > 0 &&
-    (d.nome.toLowerCase().includes(formData.recipient.toLowerCase()) ||
-     d.departamento.toLowerCase().includes(formData.recipient.toLowerCase()))
+  useEffect(() => {
+    getRecipients()
+      .then(data => setDestinatarios(data.map(d => ({ nome: d.name, departamento: d.department, email: d.email }))))
+      .catch(() => {})
+  }, [])
+
+  const suggestions = destinatarios.filter(d =>
+    recipientDisplay.length > 0 &&
+    (d.nome.toLowerCase().includes(recipientDisplay.toLowerCase()) ||
+     d.departamento.toLowerCase().includes(recipientDisplay.toLowerCase()))
   )
 
   const handleChange = (e) => {
@@ -126,9 +129,8 @@ function TicketForm({ onSuccess }) {
                 <span><Send size={17} /></span>
                 <input
                   type="text"
-                  name="recipient"
-                  value={formData.recipient}
-                  onChange={handleChange}
+                  value={recipientDisplay}
+                  onChange={e => { setRecipientDisplay(e.target.value); setFormData({ ...formData, recipient: '' }) }}
                   placeholder="Departamento ou nome da pessoa"
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
@@ -138,13 +140,30 @@ function TicketForm({ onSuccess }) {
               {showSuggestions && suggestions.length > 0 && (
                 <ul className="suggestions-list">
                   {suggestions.map((d, i) => (
-                    <li key={i} onMouseDown={() => setFormData({ ...formData, recipient: `${d.nome} — ${d.departamento}` })}>
+                    <li key={i} onMouseDown={() => {
+                      setRecipientDisplay(`${d.nome} — ${d.departamento}`)
+                      setFormData(prev => ({ ...prev, recipient: d.email }))
+                    }}>
                       <span className="sug-nome">{d.nome}</span>
                       <span className="sug-dept">{d.departamento}</span>
                     </li>
                   ))}
                 </ul>
               )}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>CC </label>
+            <div className="input-icon">
+              <span><Mail size={17} /></span>
+              <input
+                type="email"
+                name="cc"
+                value={formData.cc}
+                onChange={handleChange}
+                placeholder="Com conhecimento "
+              />
             </div>
           </div>
 

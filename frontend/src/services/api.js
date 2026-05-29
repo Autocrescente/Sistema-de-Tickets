@@ -1,6 +1,6 @@
 const BASE_URL = 'https://app.autocrescente.com/sistemaTickets/Api'
 
-const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTE4MGJlMTM5ZWEwMzViNjJmZTEwNGEiLCJpYXQiOjE3Nzk5NzY5OTAsImV4cCI6MTc4MDAxMjk5MH0.czTcu3htmUpbnNFXiEjra2uRcTJKqL-S-1qjWJ7Ytc0'
+const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTE4MGJlMTM5ZWEwMzViNjJmZTEwNGEiLCJpYXQiOjE3ODAwNDEwMzksImV4cCI6MTc4MDA3NzAzOX0.d6OFBhNcFVMaypxlb6MQJf0JemudUf4TuUU1RWd_Klc'
 
 function getToken() {
   return TOKEN
@@ -16,9 +16,8 @@ export async function createTicket(formData, attachment) {
   body.append('description', formData.description)
   body.append('priority',    formData.priority || 'normal')
 
-  if (formData.recipient) {
-    body.append('recipient', formData.recipient)
-  }
+  if (formData.recipient) body.append('recipient', formData.recipient)
+  if (formData.cc)        body.append('cc', formData.cc)
 
   if (attachment) {
     body.append('attachments', attachment)
@@ -46,6 +45,12 @@ export async function getTickets(params = {}) {
     const err = await response.json().catch(() => ({}))
     throw new Error(err.message || 'Erro ao carregar tickets')
   }
+  return response.json()
+}
+
+export async function getRecipients() {
+  const response = await fetch(`${BASE_URL}/recipients`)
+  if (!response.ok) throw new Error('Erro ao carregar destinatários')
   return response.json()
 }
 

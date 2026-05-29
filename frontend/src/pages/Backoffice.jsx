@@ -1,20 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Search, RefreshCw, X, Send, Pencil, Trash2, Check, Plus, Ticket, Clock, Users, BarChart2 } from 'lucide-react'
-import { getTickets, getTicket, updateTicket, deleteTicket, addComment } from '../services/api'
+import { Search, RefreshCw, X, Send, Pencil, Trash2, Check, Plus, Ticket, Clock, Paperclip } from 'lucide-react'
+import { getTickets, getTicket, updateTicket, deleteTicket, addComment, getRecipients } from '../services/api'
 import TicketForm from './TicketForm'
 import Historico from './Historico'
 import './Backoffice.css'
 
-const DESTINATARIOS = [
-  { nome: 'João Pedro',     departamento: 'Informática'        },
-  { nome: 'João Ferreira',  departamento: 'Comercial'          },
-  { nome: 'Ana Costa',      departamento: 'Recursos Humanos'   },
-  { nome: 'Carlos Mota',    departamento: 'Contabilidade'      },
-  { nome: 'Sofia Lima',     departamento: 'Receção'            },
-  { nome: 'Marta Santos',   departamento: 'Peças e Acessórios' },
-  { nome: 'Rui Oliveira',   departamento: 'Oficina'            },
-  { nome: 'Inês Rodrigues', departamento: 'Administração'      },
-]
 
 const MOCK_TICKETS = [
   { _id: '1', ticketNumber: 'TKT-20260528-0001', firstName: 'Ana',    lastName: 'Costa',    subject: 'Problema com impressora',        priority: 'urgente', status: 'aberto',       createdAt: '2026-05-28T09:00:00Z' },
@@ -47,10 +37,8 @@ const priorityColor = { urgente: '#dc2626', alta: '#ea580c', normal: '#6366f1', 
 const priorityBg    = { urgente: '#fef2f2', alta: '#fff7ed', normal: '#eef2ff', baixa: '#f0fdf4' }
 
 const NAV_ITEMS = [
-  { key: 'tickets',   label: 'Tickets',        icon: Ticket   },
-  { key: 'history',   label: 'Histórico',      icon: Clock    },
-  { key: 'users',     label: 'Utilizadores',   icon: Users    },
-  { key: 'dashboard', label: 'Dashboard',      icon: BarChart2},
+  { key: 'tickets', label: 'Tickets',   icon: Ticket },
+  { key: 'history', label: 'Histórico', icon: Clock  },
 ]
 
 function ComingSoon({ title }) {
@@ -63,6 +51,7 @@ function ComingSoon({ title }) {
 }
 
 function Backoffice() {
+  const [destinatarios, setDestinatarios] = useState([])
   const [page, setPage]           = useState('tickets')
   const [tickets, setTickets]     = useState([])
   const [loading, setLoading]     = useState(true)
@@ -94,6 +83,12 @@ function Backoffice() {
       .catch(() => setTickets(MOCK_TICKETS))
       .finally(() => setLoading(false))
   }
+
+  useEffect(() => {
+    getRecipients()
+      .then(data => setDestinatarios(data.map(d => ({ nome: d.name, departamento: d.department, email: d.email }))))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => { load() }, [statusTab, priority])
 
@@ -226,9 +221,7 @@ function Backoffice() {
       {/* CONTEÚDO */}
       <main className="bo-main">
 
-      {page === 'history'   && <Historico onTicketClick={openDrawer} />}
-      {page === 'users'     && <ComingSoon title="Gestão de Utilizadores" />}
-      {page === 'dashboard' && <ComingSoon title="Dashboard e Métricas" />}
+      {page === 'history' && <Historico onTicketClick={openDrawer} />}
 
       {page === 'tickets' && (
       <div className="bo-page">
@@ -273,55 +266,86 @@ function Backoffice() {
 
       {error && <p className="bo-error">{error}</p>}
 
-      <div className="bo-card">
-        <table className="bo-table">
-          <thead>
-            <tr>
-              <th>Número</th>
-              <th>Requerente</th>
-              <th>Assunto</th>
-              <th>Prioridade</th>
-              <th>Estado</th>
-              <th>Data</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr><td colSpan={6} className="bo-center">A carregar...</td></tr>
-            )}
-            {!loading && tickets.length === 0 && (
-              <tr><td colSpan={6} className="bo-center">Nenhum ticket encontrado.</td></tr>
-            )}
-            {!loading && tickets.map(t => (
-              <tr key={t._id} className="bo-row-clickable" onClick={() => openDrawer(t)}>
-                <td className="bo-num">{t.ticketNumber}</td>
-                <td>{t.firstName} {t.lastName}</td>
-                <td className="bo-subject">{t.subject}</td>
-                <td>
-                  <span className="bo-badge" style={{ color: priorityColor[t.priority], background: priorityBg[t.priority] }}>
-                    {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
-                  </span>
-                </td>
-                <td onClick={e => e.stopPropagation()}>
-                  <select
-                    className="bo-status-select"
-                    value={t.status}
-                    style={{ color: statusColor[t.status], background: statusBg[t.status] }}
-                    onChange={e => handleStatus(t._id, e.target.value)}
-                  >
-                    <option value="aberto">Aberto</option>
-                    <option value="em_progresso">Em Progresso</option>
-                    <option value="aguarda">Aguarda</option>
-                    <option value="resolvido">Resolvido</option>
-                    <option value="fechado">Fechado</option>
-                  </select>
-                </td>
-                <td className="bo-date">{new Date(t.createdAt).toLocaleDateString('pt-PT')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {loading && <p className="bo-center" style={{ padding: '40px' }}>A carregar...</p>}
+
+      {!loading && (() => {
+        // agrupar tickets por destinatário
+        const groups = {}
+        tickets.forEach(t => {
+          const key = t.recipient || '__none__'
+          if (!groups[key]) groups[key] = []
+          groups[key].push(t)
+        })
+
+        // ordenar: destinatários conhecidos primeiro, sem destinatário no fim
+        const order = [
+          ...destinatarios.map(d => d.email),
+          '__none__',
+        ]
+        const keys = Object.keys(groups).sort((a, b) => order.indexOf(a) - order.indexOf(b))
+
+        if (keys.length === 0) return (
+          <p className="bo-center" style={{ padding: '40px' }}>Nenhum ticket encontrado.</p>
+        )
+
+        return keys.map(key => {
+          const dest = destinatarios.find(d => d.email === key)
+          const label = dest ? `${dest.nome} — ${dest.departamento}` : 'Sem Destinatário'
+          const list  = groups[key]
+
+          return (
+            <div key={key} className="bo-group">
+              <div className="bo-group-header">
+                <span className="bo-group-title">{label}</span>
+                <span className="bo-group-count">{list.length} ticket{list.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="bo-card">
+                <table className="bo-table">
+                  <thead>
+                    <tr>
+                      <th>Número</th>
+                      <th>Requerente</th>
+                      <th>Assunto</th>
+                      <th>Prioridade</th>
+                      <th>Estado</th>
+                      <th>Data</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {list.map(t => (
+                      <tr key={t._id} className="bo-row-clickable" onClick={() => openDrawer(t)}>
+                        <td className="bo-num">{t.ticketNumber}</td>
+                        <td>{t.firstName} {t.lastName}</td>
+                        <td className="bo-subject">{t.subject}</td>
+                        <td>
+                          <span className="bo-badge" style={{ color: priorityColor[t.priority], background: priorityBg[t.priority] }}>
+                            {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
+                          </span>
+                        </td>
+                        <td onClick={e => e.stopPropagation()}>
+                          <select
+                            className="bo-status-select"
+                            value={t.status}
+                            style={{ color: statusColor[t.status], background: statusBg[t.status] }}
+                            onChange={e => handleStatus(t._id, e.target.value)}
+                          >
+                            <option value="aberto">Aberto</option>
+                            <option value="em_progresso">Em Progresso</option>
+                            <option value="aguarda">Aguarda</option>
+                            <option value="resolvido">Resolvido</option>
+                            <option value="fechado">Fechado</option>
+                          </select>
+                        </td>
+                        <td className="bo-date">{new Date(t.createdAt).toLocaleDateString('pt-PT')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )
+        })
+      })()}
 
       {/* MODAL */}
       {drawer && (
@@ -374,6 +398,12 @@ function Backoffice() {
                       <span className="mo-info-value">{drawer.recipient}</span>
                     </div>
                   )}
+                  {drawer.cc && (
+                    <div className="mo-info-row">
+                      <span className="mo-info-label">CC</span>
+                      <span className="mo-info-value">{drawer.cc}</span>
+                    </div>
+                  )}
                   <div className="mo-info-row mo-info-desc">
                     <span className="mo-info-label">Descrição</span>
                     {editMode
@@ -381,6 +411,25 @@ function Backoffice() {
                       : <span className="mo-info-value">{drawer.description || '—'}</span>
                     }
                   </div>
+                  {(drawer.attachments || []).length > 0 && (
+                    <div className="mo-info-row mo-info-desc">
+                      <span className="mo-info-label">Anexos</span>
+                      <div className="mo-attachments">
+                        {drawer.attachments.map((a, i) => (
+                          <a
+                            key={i}
+                            className="mo-attachment"
+                            href={`https://app.autocrescente.com/sistemaTickets/Api/uploads/${a.filename}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <Paperclip size={13} />
+                            {a.originalName}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {editMode && (
                     <div className="mo-info-row">
                       <span className="mo-info-label">Prioridade</span>
@@ -390,6 +439,16 @@ function Backoffice() {
                         <option value="normal">Normal</option>
                         <option value="baixa">Baixa</option>
                       </select>
+                    </div>
+                  )}
+                  {editMode && (
+                    <div className="mo-edit-actions">
+                      <button className="mo-save-btn" onClick={handleSaveEdit}>
+                        <Check size={14} /> Guardar alterações
+                      </button>
+                      <button className="mo-cancel-btn" onClick={() => setEditMode(false)}>
+                        Cancelar
+                      </button>
                     </div>
                   )}
                 </div>
@@ -419,8 +478,8 @@ function Backoffice() {
                         onChange={e => setReassignTo(e.target.value)}
                       >
                         <option value="">Selecionar...</option>
-                        {DESTINATARIOS.map((d, i) => (
-                          <option key={i} value={`${d.nome} — ${d.departamento}`}>
+                        {destinatarios.map((d, i) => (
+                          <option key={i} value={d.email}>
                             {d.nome} — {d.departamento}
                           </option>
                         ))}

@@ -309,6 +309,12 @@
   color: #fff;
 }
 
+.label-optional {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
 .recipient-wrapper {
   position: relative;
 }
