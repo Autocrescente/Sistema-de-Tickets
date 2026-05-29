@@ -1,0 +1,96 @@
+.success-page {
+  min-height: 100vh;
+  background-color: #f4f6f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.success-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.success-icon {
+  background: #f0fdf4;
+  border-radius: 50%;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-card h1 {
+  font-size: 26px;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.success-sub {
+  color: #6b7280;
+  font-size: 15px;
+  margin: 0;
+}
+
+.ticket-number-box {
+  background: #f4f6f8;
+  border: 1.5px dashed #c7d2fe;
+  border-radius: 12px;
+  padding: 16px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.ticket-label {
+  font-size: 12px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ticket-number {
+  font-size: 22px;
+  font-weight: 800;
+  color: #4f46e5;
+  letter-spacing: 1px;
+}
+
+.success-info {
+  font-size: 14px;
+  color: #9ca3af;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.back-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #6d6aff, #4f46e5);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.back-btn:hover {
+  background: linear-gradient(135deg, #7c79ff, #4338ca);
+  transform: translateY(-1px);
+}
