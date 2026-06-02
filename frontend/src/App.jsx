@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import './App.css'
+import Home from './pages/Home'
 import TicketForm from './pages/TicketForm'
 import SuccessPage from './pages/SuccessPage'
 import Backoffice from './pages/Backoffice'
 
 function App() {
-  const [page, setPage] = useState('form')
+  const [page, setPage] = useState('home')
   const [ticketNumber, setTicketNumber] = useState('')
 
   const handleSuccess = (number) => {
@@ -14,17 +15,13 @@ function App() {
   }
 
   const handleBack = () => {
-    setPage('form')
+    setPage('home')
     setTicketNumber('')
   }
 
   return (
     <div className="app">
-      <nav className="dev-nav">
-        <button onClick={() => setPage('form')}>Formulário</button>
-        <button onClick={() => setPage('success')}>Confirmação</button>
-        <button onClick={() => setPage('backoffice')}>Backoffice</button>
-      </nav>
+      {page === 'home'       && <Home onNavigate={setPage} />}
       {page === 'form'       && <TicketForm onSuccess={handleSuccess} />}
       {page === 'success'    && <SuccessPage ticketNumber={ticketNumber} onBack={handleBack} />}
       {page === 'backoffice' && <Backoffice />}
