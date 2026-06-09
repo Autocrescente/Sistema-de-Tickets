@@ -1,0 +1,113 @@
+.apps-page {
+  min-height: 100vh;
+  background: #f4f6f8;
+  display: flex;
+  justify-content: center;
+  padding: 32px 20px;
+}
+
+.apps-content {
+  width: 100%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.apps-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apps-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 8px;
+  width: fit-content;
+}
+
+.apps-back:hover { color: #1a1a2e; }
+
+.apps-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.apps-sub {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.apps-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.app-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.app-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+}
+
+.app-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.app-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-nome {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.app-desc {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.app-link-icon {
+  color: #d1d5db;
+  flex-shrink: 0;
+}
+
+.app-card:hover .app-link-icon {
+  color: #6366f1;
+}
