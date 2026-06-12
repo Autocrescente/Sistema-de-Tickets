@@ -12,7 +12,7 @@ const ctrl = require('../controllers/statsController');
 
 /**
  * @openapi
- * /api/stats:
+ * /stats:
  *   get:
  *     summary: Obter estatísticas gerais dos tickets
  *     tags: [Estatísticas]

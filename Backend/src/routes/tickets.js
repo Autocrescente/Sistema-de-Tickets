@@ -15,7 +15,7 @@ const ctrl = require('../controllers/ticketController');
 
 /**
  * @openapi
- * /api/tickets:
+ * /tickets:
  *   post:
  *     summary: Criar novo ticket (público)
  *     tags: [Tickets]
@@ -73,7 +73,7 @@ router.post(
 
 /**
  * @openapi
- * /api/tickets:
+ * /tickets:
  *   get:
  *     summary: Listar tickets com filtros e paginação
  *     tags: [Tickets]
@@ -120,7 +120,7 @@ router.get('/', protect, ctrl.getTickets);
 
 /**
  * @openapi
- * /api/tickets/{id}:
+ * /tickets/{id}:
  *   get:
  *     summary: Obter detalhes de um ticket
  *     tags: [Tickets]
@@ -143,7 +143,7 @@ router.get('/:id', protect, ctrl.getTicket);
 
 /**
  * @openapi
- * /api/tickets/{id}:
+ * /tickets/{id}:
  *   patch:
  *     summary: Atualizar estado ou dados de um ticket
  *     tags: [Tickets]
@@ -189,7 +189,7 @@ router.patch(
 
 /**
  * @openapi
- * /api/tickets/{id}:
+ * /tickets/{id}:
  *   delete:
  *     summary: Eliminar ticket e os seus anexos
  *     tags: [Tickets]
@@ -209,7 +209,7 @@ router.delete('/:id', protect, ctrl.deleteTicket);
 
 /**
  * @openapi
- * /api/tickets/{id}/comments:
+ * /tickets/{id}/comments:
  *   post:
  *     summary: Adicionar comentário interno a um ticket
  *     tags: [Tickets]
@@ -246,6 +246,44 @@ router.post(
     body('text').notEmpty().withMessage('Texto é obrigatório'),
   ],
   ctrl.addComment
+);
+
+/**
+ * @openapi
+ * /tickets/{id}/observations:
+ *   post:
+ *     summary: Adicionar observação interna a um ticket
+ *     tags: [Tickets]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [author, text]
+ *             properties:
+ *               author: { type: string, example: Técnico João }
+ *               text:   { type: string, example: Verificado no local, aguarda peça de substituição. }
+ *     responses:
+ *       201:
+ *         description: Observação adicionada
+ *       404:
+ *         description: Ticket não encontrado
+ */
+router.post(
+  '/:id/observations',
+  protect,
+  [
+    body('author').notEmpty().withMessage('Autor é obrigatório'),
+    body('text').notEmpty().withMessage('Texto é obrigatório'),
+  ],
+  ctrl.addObservation
 );
 
 module.exports = router;

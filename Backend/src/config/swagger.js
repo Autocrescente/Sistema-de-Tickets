@@ -41,6 +41,16 @@ const options = {
             createdAt: { type: 'string', format: 'date-time' },
           },
         },
+        Recipient: {
+          type: 'object',
+          properties: {
+            _id:        { type: 'string' },
+            name:       { type: 'string', example: 'João Silva' },
+            email:      { type: 'string', example: 'joao@empresa.com' },
+            department: { type: 'string', example: 'Informática' },
+            createdAt:  { type: 'string', format: 'date-time' },
+          },
+        },
         Ticket: {
           type: 'object',
           properties: {
@@ -50,6 +60,7 @@ const options = {
             lastName:     { type: 'string', example: 'Silva' },
             email:        { type: 'string', example: 'joao@empresa.com' },
             recipient:    { type: 'string', example: 'suporte@empresa.com' },
+            cc:           { type: 'array', items: { type: 'string' }, example: ['chefe@empresa.com'] },
             subject:      { type: 'string', example: 'Problema com impressora' },
             description:  { type: 'string', example: 'A impressora do 2º andar não imprime.' },
             priority: {

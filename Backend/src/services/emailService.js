@@ -15,15 +15,22 @@ const STATUS_LABELS = {
   fechado:      'Fechado',
 };
 
-const createTransport = () =>
-  nodemailer.createTransport({
+const createTransport = () => {
+  if (process.env.EMAIL_SERVICE) {
+    return nodemailer.createTransport({
+      service: process.env.EMAIL_SERVICE,
+      auth:    { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
+  }
+  return nodemailer.createTransport({
     host:   process.env.EMAIL_HOST,
     port:   parseInt(process.env.EMAIL_PORT) || 587,
     secure: false,
     auth:   { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
   });
+};
 
-const isEmailConfigured = () => !!(process.env.EMAIL_HOST && process.env.EMAIL_USER);
+const isEmailConfigured = () => !!(process.env.EMAIL_USER && (process.env.EMAIL_SERVICE || process.env.EMAIL_HOST));
 
 const sendTicketCreatedToRequester = async (ticket) => {
   if (!isEmailConfigured()) return;
@@ -47,9 +54,11 @@ const sendTicketCreatedToRequester = async (ticket) => {
 
 const sendTicketCreatedToRecipient = async (ticket) => {
   if (!isEmailConfigured() || !ticket.recipient) return;
+  const cc = ticket.cc && ticket.cc.length ? ticket.cc : undefined;
   await createTransport().sendMail({
     from:    process.env.EMAIL_FROM,
     to:      ticket.recipient,
+    cc,
     subject: `[${ticket.ticketNumber}] Novo ticket atribuído: ${ticket.subject}`,
     html: `
       <h2>Novo ticket atribuído</h2>
@@ -66,9 +75,11 @@ const sendTicketCreatedToRecipient = async (ticket) => {
 
 const sendStatusUpdate = async (ticket) => {
   if (!isEmailConfigured()) return;
+  const cc = ticket.cc && ticket.cc.length ? ticket.cc : undefined;
   await createTransport().sendMail({
     from:    process.env.EMAIL_FROM,
     to:      ticket.email,
+    cc,
     subject: `[${ticket.ticketNumber}] Estado atualizado: ${STATUS_LABELS[ticket.status]}`,
     html: `
       <h2>O estado do seu ticket foi atualizado</h2>

@@ -9,6 +9,18 @@ const {
   sendStatusUpdate,
 } = require('../services/emailService');
 
+const FIELD_LABELS = {
+  status:      'Estado',
+  priority:    'Prioridade',
+  recipient:   'Destinatário',
+  cc:          'CC',
+  subject:     'Assunto',
+  description: 'Descrição',
+};
+
+const authorFromJwt = (user) =>
+  user?.name || user?.email || user?.username || user?.sub || 'Utilizador';
+
 exports.createTicket = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -17,7 +29,8 @@ exports.createTicket = async (req, res, next) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { firstName, lastName, email, recipient, subject, description, priority } = req.body;
+    const { firstName, lastName, email, recipient, cc, subject, description, priority } = req.body;
+    const ccList = cc ? (Array.isArray(cc) ? cc : cc.split(',').map(e => e.trim()).filter(Boolean)) : [];
 
     const attachments = (req.files || []).map(f => ({
       originalName: f.originalname,
@@ -28,9 +41,10 @@ exports.createTicket = async (req, res, next) => {
 
     const ticket = await Ticket.create({
       ticketNumber: await generateTicketNumber(),
-      firstName, lastName, email, recipient, subject, description,
+      firstName, lastName, email, recipient, cc: ccList, subject, description,
       priority: priority || 'normal',
       attachments,
+      history: [{ author: `${firstName} ${lastName}`, action: 'Ticket criado' }],
     });
 
     sendTicketCreatedToRequester(ticket).catch(console.error);
@@ -95,10 +109,29 @@ exports.updateTicket = async (req, res, next) => {
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ message: 'Ticket não encontrado.' });
 
+    const author   = authorFromJwt(req.user);
     const prevStatus = ticket.status;
-    const allowed = ['status', 'priority', 'recipient', 'subject', 'description'];
-    allowed.forEach(field => {
-      if (req.body[field] !== undefined) ticket[field] = req.body[field];
+    const trackable  = ['status', 'priority', 'recipient', 'cc', 'subject', 'description'];
+
+    trackable.forEach(field => {
+      if (req.body[field] === undefined) return;
+      const oldVal = Array.isArray(ticket[field])
+        ? ticket[field].join(', ')
+        : String(ticket[field] ?? '');
+      const newVal = Array.isArray(req.body[field])
+        ? req.body[field].join(', ')
+        : String(req.body[field]);
+
+      if (oldVal !== newVal) {
+        ticket.history.push({
+          author,
+          action: `${FIELD_LABELS[field] || field} alterado`,
+          field,
+          from: oldVal,
+          to:   newVal,
+        });
+      }
+      ticket[field] = req.body[field];
     });
 
     await ticket.save();
@@ -137,11 +170,27 @@ exports.addComment = async (req, res, next) => {
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ message: 'Ticket não encontrado.' });
 
-    const comment = { author: req.body.author, text: req.body.text };
-    ticket.comments.push(comment);
+    ticket.comments.push({ author: req.body.author, text: req.body.text });
     await ticket.save();
 
     res.status(201).json(ticket.comments[ticket.comments.length - 1]);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.addObservation = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) return res.status(404).json({ message: 'Ticket não encontrado.' });
+
+    ticket.observations.push({ author: req.body.author, text: req.body.text });
+    await ticket.save();
+
+    res.status(201).json(ticket.observations[ticket.observations.length - 1]);
   } catch (err) {
     next(err);
   }

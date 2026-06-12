@@ -1,5 +1,24 @@
 const mongoose = require('mongoose');
 
+const historySchema = new mongoose.Schema(
+  {
+    author: { type: String, default: 'Sistema' },
+    action: { type: String, required: true },
+    field:  { type: String },
+    from:   { type: String },
+    to:     { type: String },
+  },
+  { timestamps: { createdAt: true, updatedAt: false } }
+);
+
+const observationSchema = new mongoose.Schema(
+  {
+    author: { type: String, required: true },
+    text:   { type: String, required: true },
+  },
+  { timestamps: { createdAt: true, updatedAt: false } }
+);
+
 const commentSchema = new mongoose.Schema(
   {
     author: { type: String, required: true },
@@ -34,6 +53,7 @@ const ticketSchema = new mongoose.Schema(
       lowercase: true,
     },
     recipient:   { type: String, trim: true },
+    cc:          [{ type: String, trim: true, lowercase: true }],
     subject:     { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
     priority: {
@@ -46,8 +66,10 @@ const ticketSchema = new mongoose.Schema(
       enum:    ['aberto', 'em_progresso', 'aguarda', 'resolvido', 'fechado'],
       default: 'aberto',
     },
-    attachments: [attachmentSchema],
-    comments:    [commentSchema],
+    attachments:  [attachmentSchema],
+    comments:     [commentSchema],
+    observations: [observationSchema],
+    history:      [historySchema],
   },
   { timestamps: true }
 );

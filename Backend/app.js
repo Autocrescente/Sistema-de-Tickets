@@ -12,6 +12,31 @@ if (process.env.APP_BASE_PATH) {
   swaggerSpec.servers.unshift({ url: prodUrl, description: "Produção" });
 }
 
+if (swaggerSpec.paths) {
+  const fixed = {};
+  for (const [p, v] of Object.entries(swaggerSpec.paths)) {
+    fixed[p.replace(/^\/api\//, "/")] = v;
+  }
+  swaggerSpec.paths = fixed;
+}
+
+// Inject schemas not yet in swagger.js
+swaggerSpec.components.schemas.Recipient = {
+  type: "object",
+  properties: {
+    _id:        { type: "string" },
+    name:       { type: "string", example: "João Silva" },
+    email:      { type: "string", example: "joao@empresa.com" },
+    department: { type: "string", example: "Informática" },
+    createdAt:  { type: "string", format: "date-time" },
+  },
+};
+if (swaggerSpec.components.schemas.Ticket) {
+  swaggerSpec.components.schemas.Ticket.properties.cc = {
+    type: "array", items: { type: "string" }, example: ["chefe@empresa.com"],
+  };
+}
+
 app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
@@ -27,11 +52,12 @@ app.get("/api-docs.json", (_req, res) => res.json(swaggerSpec));
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
-app.use("/api/tickets", require("./src/routes/tickets"));
-app.use("/api/stats",   require("./src/routes/stats"));
+app.use("/tickets",    require("./src/routes/tickets"));
+app.use("/stats",      require("./src/routes/stats"));
+app.use("/recipients", require("./src/routes/recipients"));
 
 app.use((_req, res) =>
-  res.status(404).json({ message: "Rota não encontrada." }),
+  res.status(404).json({ message: "Rota nao encontrada." }),
 );
 app.use(errorHandler);
 
