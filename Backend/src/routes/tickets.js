@@ -286,4 +286,17 @@ router.post(
   ctrl.addObservation
 );
 
+router.post('/:id/attachments', protect, upload.array('attachments', 5), ctrl.addAttachments);
+
+router.delete('/:id/attachments/:attachmentId', protect, ctrl.deleteAttachment);
+
+router.patch(
+  '/:id/comments/:commentId',
+  protect,
+  [body('text').notEmpty().withMessage('Texto é obrigatório')],
+  ctrl.updateComment
+);
+
+router.delete('/:id/comments/:commentId', protect, ctrl.deleteComment);
+
 module.exports = router;

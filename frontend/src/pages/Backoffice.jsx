@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Search, RefreshCw, X, Send, Pencil, Trash2, Check, Plus, Ticket, Clock, Paperclip } from 'lucide-react'
-import { getTickets, getTicket, updateTicket, deleteTicket, addComment, getRecipients } from '../services/api'
+import { Search, RefreshCw, X, Send, Pencil, Trash2, Check, Plus, Ticket, Clock, Paperclip, UploadCloud } from 'lucide-react'
+import { getTickets, getTicket, updateTicket, deleteTicket, addComment, getRecipients, addAttachments, deleteAttachment, updateComment, deleteComment } from '../services/api'
 import TicketForm from './TicketForm'
 import Historico from './Historico'
 import './Backoffice.css'
@@ -69,6 +69,9 @@ function Backoffice() {
   const [savingReassign, setSavingReassign] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [editData, setEditData] = useState({})
+  const [editFiles, setEditFiles] = useState([])
+  const [editingCommentId, setEditingCommentId] = useState(null)
+  const [editingCommentText, setEditingCommentText] = useState('')
   const [newTicketModal, setNewTicketModal] = useState(false)
 
   const load = () => {
@@ -128,6 +131,9 @@ function Backoffice() {
     setReassignTo('')
     setEditMode(false)
     setEditData({})
+    setEditFiles([])
+    setEditingCommentId(null)
+    setEditingCommentText('')
   }
 
   const startEdit = () => {
@@ -136,17 +142,63 @@ function Backoffice() {
       description: drawer.description || '',
       priority:    drawer.priority    || 'normal',
     })
+    setEditFiles([])
     setEditMode(true)
   }
 
   const handleSaveEdit = async () => {
     try {
       const updated = await updateTicket(drawer._id, editData)
-      setDrawer(prev => ({ ...prev, ...updated }))
-      setTickets(prev => prev.map(t => t._id === drawer._id ? { ...t, ...updated } : t))
+      let final = updated
+      if (editFiles.length > 0) {
+        final = await addAttachments(drawer._id, editFiles)
+      }
+      setDrawer(prev => ({ ...prev, ...final }))
+      setTickets(prev => prev.map(t => t._id === drawer._id ? { ...t, ...final } : t))
       setEditMode(false)
+      setEditFiles([])
     } catch {
       alert('Erro ao guardar alterações')
+    }
+  }
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    if (!window.confirm('Eliminar este anexo?')) return
+    try {
+      await deleteAttachment(drawer._id, attachmentId)
+      setDrawer(prev => ({ ...prev, attachments: prev.attachments.filter(a => a._id !== attachmentId) }))
+    } catch {
+      alert('Erro ao eliminar anexo')
+    }
+  }
+
+  const startEditComment = (comment) => {
+    setEditingCommentId(comment._id)
+    setEditingCommentText(comment.text)
+  }
+
+  const handleSaveComment = async (commentId) => {
+    if (!editingCommentText.trim()) return
+    try {
+      const updated = await updateComment(drawer._id, commentId, { text: editingCommentText })
+      setDrawer(prev => ({
+        ...prev,
+        comments: prev.comments.map(c => c._id === commentId ? { ...c, text: updated.text } : c),
+      }))
+      setEditingCommentId(null)
+      setEditingCommentText('')
+    } catch {
+      alert('Erro ao editar nota')
+    }
+  }
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Eliminar esta nota?')) return
+    try {
+      await deleteComment(drawer._id, commentId)
+      setDrawer(prev => ({ ...prev, comments: prev.comments.filter(c => c._id !== commentId) }))
+    } catch {
+      alert('Erro ao eliminar nota')
     }
   }
 
@@ -411,22 +463,62 @@ function Backoffice() {
                       : <span className="mo-info-value">{drawer.description || '—'}</span>
                     }
                   </div>
-                  {(drawer.attachments || []).length > 0 && (
+                  {((drawer.attachments || []).length > 0 || editMode) && (
                     <div className="mo-info-row mo-info-desc">
                       <span className="mo-info-label">Anexos</span>
                       <div className="mo-attachments">
-                        {drawer.attachments.map((a, i) => (
-                          <a
-                            key={i}
-                            className="mo-attachment"
-                            href={`https://app.autocrescente.com/sistemaTickets/Api/uploads/${a.filename}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <Paperclip size={13} />
-                            {a.originalName}
-                          </a>
+                        {(drawer.attachments || []).map((a) => (
+                          <div key={a._id || a.filename} className="mo-attachment-row">
+                            <a
+                              className="mo-attachment"
+                              href={`https://app.autocrescente.com/sistemaTickets/Api/uploads/${a.filename}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <Paperclip size={13} />
+                              {a.originalName}
+                            </a>
+                            {editMode && (
+                              <button
+                                className="mo-attach-del"
+                                onClick={() => handleDeleteAttachment(a._id)}
+                                title="Eliminar anexo"
+                              >
+                                <X size={12} />
+                              </button>
+                            )}
+                          </div>
                         ))}
+                        {editMode && (
+                          <>
+                            {editFiles.map((f, i) => (
+                              <div key={i} className="mo-attachment-row mo-attachment-pending">
+                                <span className="mo-attachment">
+                                  <Paperclip size={13} />
+                                  {f.name}
+                                </span>
+                                <button
+                                  className="mo-attach-del"
+                                  onClick={() => setEditFiles(prev => prev.filter((_, idx) => idx !== i))}
+                                  title="Remover"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ))}
+                            <label className="mo-attach-add">
+                              <UploadCloud size={13} />
+                              Adicionar ficheiro
+                              <input
+                                type="file"
+                                multiple
+                                accept=".pdf,.png,.jpg,.jpeg,.gif,.webp"
+                                style={{ display: 'none' }}
+                                onChange={e => setEditFiles(prev => [...prev, ...Array.from(e.target.files)])}
+                              />
+                            </label>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
@@ -501,13 +593,35 @@ function Backoffice() {
                     {(drawer.comments || []).length === 0 && (
                       <p className="mo-no-comments">Sem notas ainda.</p>
                     )}
-                    {(drawer.comments || []).map((c, i) => (
-                      <div key={i} className="mo-comment">
+                    {(drawer.comments || []).map((c) => (
+                      <div key={c._id} className="mo-comment">
                         <div className="mo-comment-header">
                           <span className="mo-comment-author">{c.author}</span>
                           <span className="mo-comment-date">{new Date(c.createdAt).toLocaleString('pt-PT')}</span>
+                          <div className="mo-comment-actions">
+                            {editingCommentId === c._id ? (
+                              <>
+                                <button className="mo-comment-btn mo-comment-btn-save" onClick={() => handleSaveComment(c._id)} title="Guardar"><Check size={12} /></button>
+                                <button className="mo-comment-btn" onClick={() => setEditingCommentId(null)} title="Cancelar"><X size={12} /></button>
+                              </>
+                            ) : (
+                              <>
+                                <button className="mo-comment-btn" onClick={() => startEditComment(c)} title="Editar"><Pencil size={12} /></button>
+                                <button className="mo-comment-btn mo-comment-btn-del" onClick={() => handleDeleteComment(c._id)} title="Eliminar"><Trash2 size={12} /></button>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <p className="mo-comment-text">{c.text}</p>
+                        {editingCommentId === c._id ? (
+                          <textarea
+                            className="mo-edit-field"
+                            value={editingCommentText}
+                            onChange={e => setEditingCommentText(e.target.value)}
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="mo-comment-text">{c.text}</p>
+                        )}
                       </div>
                     ))}
                   </div>
