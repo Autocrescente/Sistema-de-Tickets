@@ -195,3 +195,96 @@ exports.addObservation = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.addAttachments = async (req, res, next) => {
+  try {
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) {
+      (req.files || []).forEach(f => fs.unlink(f.path, () => {}));
+      return res.status(404).json({ message: 'Ticket não encontrado.' });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'Nenhum ficheiro enviado.' });
+    }
+
+    const newAttachments = req.files.map(f => ({
+      originalName: f.originalname,
+      filename:     f.filename,
+      mimetype:     f.mimetype,
+      size:         f.size,
+    }));
+
+    ticket.attachments.push(...newAttachments);
+    ticket.history.push({
+      author: authorFromJwt(req.user),
+      action: `${newAttachments.length} anexo(s) adicionado(s)`,
+    });
+    await ticket.save();
+
+    res.json(ticket);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteAttachment = async (req, res, next) => {
+  try {
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) return res.status(404).json({ message: 'Ticket não encontrado.' });
+
+    const attachment = ticket.attachments.id(req.params.attachmentId);
+    if (!attachment) return res.status(404).json({ message: 'Anexo não encontrado.' });
+
+    const filePath = path.join(__dirname, '../../uploads', attachment.filename);
+    fs.unlink(filePath, err => { if (err && err.code !== 'ENOENT') console.error(err); });
+
+    attachment.deleteOne();
+    ticket.history.push({
+      author: authorFromJwt(req.user),
+      action: `Anexo "${attachment.originalName}" eliminado`,
+    });
+    await ticket.save();
+
+    res.json({ message: 'Anexo eliminado.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateComment = async (req, res, next) => {
+  try {
+    const { text } = req.body;
+    if (!text?.trim()) return res.status(400).json({ message: 'Texto é obrigatório.' });
+
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) return res.status(404).json({ message: 'Ticket não encontrado.' });
+
+    const comment = ticket.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: 'Comentário não encontrado.' });
+
+    comment.text = text;
+    await ticket.save();
+
+    res.json(comment);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteComment = async (req, res, next) => {
+  try {
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) return res.status(404).json({ message: 'Ticket não encontrado.' });
+
+    const comment = ticket.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: 'Comentário não encontrado.' });
+
+    comment.deleteOne();
+    await ticket.save();
+
+    res.json({ message: 'Comentário eliminado.' });
+  } catch (err) {
+    next(err);
+  }
+};

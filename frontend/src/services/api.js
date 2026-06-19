@@ -108,3 +108,58 @@ export async function updateTicket(id, data) {
   }
   return response.json()
 }
+
+export async function addAttachments(id, files) {
+  const body = new FormData()
+  files.forEach(f => body.append('attachments', f))
+  const response = await fetch(`${BASE_URL}/tickets/${id}/attachments`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+    body,
+  })
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err.message || 'Erro ao adicionar anexos')
+  }
+  return response.json()
+}
+
+export async function deleteAttachment(ticketId, attachmentId) {
+  const response = await fetch(`${BASE_URL}/tickets/${ticketId}/attachments/${attachmentId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  })
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err.message || 'Erro ao eliminar anexo')
+  }
+  return response.json()
+}
+
+export async function updateComment(ticketId, commentId, data) {
+  const response = await fetch(`${BASE_URL}/tickets/${ticketId}/comments/${commentId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err.message || 'Erro ao editar nota')
+  }
+  return response.json()
+}
+
+export async function deleteComment(ticketId, commentId) {
+  const response = await fetch(`${BASE_URL}/tickets/${ticketId}/comments/${commentId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${getToken()}` },
+  })
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err.message || 'Erro ao eliminar nota')
+  }
+  return response.json()
+}

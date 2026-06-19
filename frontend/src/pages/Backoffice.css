@@ -679,13 +679,84 @@
 
 .mo-comment-header {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 4px;
 }
 
 .mo-comment-author { font-size: 12px; font-weight: 700; color: #1a1a2e; }
-.mo-comment-date   { font-size: 11px; color: #9ca3af; }
+.mo-comment-date   { font-size: 11px; color: #9ca3af; flex: 1; }
 .mo-comment-text   { font-size: 13px; color: #374151; line-height: 1.5; }
+
+.mo-comment-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.mo-comment:hover .mo-comment-actions { opacity: 1; }
+
+.mo-comment-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 3px 5px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s;
+}
+
+.mo-comment-btn:hover          { background: #f3f4f6; color: #374151; }
+.mo-comment-btn-del:hover      { background: #fef2f2; color: #dc2626; }
+.mo-comment-btn-save:hover     { background: #f0fdf4; color: #16a34a; }
+
+.mo-attachment-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mo-attachment-pending .mo-attachment {
+  background: #f0fdf4;
+  color: #16a34a;
+  opacity: 0.9;
+}
+
+.mo-attach-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 3px 5px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.mo-attach-del:hover { background: #fef2f2; color: #dc2626; }
+
+.mo-attach-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6366f1;
+  cursor: pointer;
+  padding: 5px 10px;
+  background: #eef2ff;
+  border-radius: 6px;
+  width: fit-content;
+  border: 1px dashed #c7d2fe;
+  transition: background 0.15s;
+}
+
+.mo-attach-add:hover { background: #e0e7ff; }
 
 .mo-add-comment {
   display: flex;

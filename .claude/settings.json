@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Pedro Jardim/OneDrive - AUTOCRESCENTE/Projetos/BackOffice_Autocrescente/FrontEnd/**)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Pedro Jardim\\OneDrive - AUTOCRESCENTE\\Projetos\\BackOffice_Autocrescente\\FrontEnd\\backoffice-autocrescente\\src\\Home\\Tickets\\src\\services",
+      "C:\\Users\\Pedro Jardim\\OneDrive - AUTOCRESCENTE\\Projetos\\BackOffice_Autocrescente\\FrontEnd\\backoffice-autocrescente\\src\\Home\\Tickets\\src\\pages"
+    ]
+  }
+}
